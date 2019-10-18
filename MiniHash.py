@@ -63,22 +63,38 @@ def jaccardSimilarityFromTwoCol(s1, s2):
 
 
 def minhashing(bm, permutation):
-    retMatrix = np.zeros((np.shape(permutation)[0], np.shape(bm)[1]))
-    # for i in len(permutation):
+    retRow = np.zeros(np.shape(bm)[1])
+    for i in range(len(permutation)):
+        temp = bm[permutation.index(i+1),:].getA()[0].nonzero()[0]
+        if len(temp)!=0:
+            for index in temp:
+                if retRow[index] == 0:
+                    retRow[index]=i+1
+    return retRow
 
 
 
 def signatureMatrix(bm, minhashNum=100):
     from random import shuffle
-    pass
+    retMatrix = np.zeros((minhashNum,np.shape(bm)[1]))
+    permutation = list(range(1,np.shape(bm)[0]+1))
+    # print(permutation)
+    for i in range(minhashNum):
+        shuffle(permutation)
+        retMatrix[i,:] = minhashing(bm,permutation)
+    return retMatrix
 
 
 if __name__ == '__main__':
-    # boolMat = accessFile()
-    boolMat = np.matrix([[4, 3, 2, 1, 0],
-               [2, 1, 3, 4, 0]])
+    boolMat = accessFile()
+    # boolMat = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
+    # permu = [[2, 3, 6, 5, 7, 1, 4], [3, 1, 7, 2, 5, 6, 4], [7, 2, 6, 5, 1, 4, 3]]
+    # for p in permu:
+    #     print(minhashing(boolMat,p))
+    boolMat = np.mat(boolMat)
+    print(signatureMatrix(boolMat)[0:3])
 
-    print(boolMat[0,:].getA()[0].nonzero())
+    # print(boolMat[0,:].getA()[0].nonzero())
     # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
 
 # print(jaccardSimilarityFromTwoCol(np.array([1, 0, 0, 1, 0]), np.array([0, 0, 1, 1, 0])))
