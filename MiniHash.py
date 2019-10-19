@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import operator
 import itertools
@@ -65,34 +67,53 @@ def jaccardSimilarityFromTwoCol(s1, s2):
 def minhashing(bm, permutation):
     retRow = np.zeros(np.shape(bm)[1])
     for i in range(len(permutation)):
-        temp = bm[permutation.index(i+1),:].getA()[0].nonzero()[0]
-        if len(temp)!=0:
+        temp = bm[permutation.index(i + 1), :].getA()[0].nonzero()[
+            0]  # select out a list of index of cell that in the row[i], and contains nonzero value.
+        if len(temp) != 0:
             for index in temp:
                 if retRow[index] == 0:
-                    retRow[index]=i+1
+                    retRow[index] = i + 1  # the i start from 0, and there is no word 0.
     return retRow
-
 
 
 def signatureMatrix(bm, minhashNum=100):
     from random import shuffle
-    retMatrix = np.zeros((minhashNum,np.shape(bm)[1]))
-    permutation = list(range(1,np.shape(bm)[0]+1))
+    retMatrix = np.zeros((minhashNum, np.shape(bm)[1]))
+    permutation = list(range(1, np.shape(bm)[0] + 1))
     # print(permutation)
     for i in range(minhashNum):
         shuffle(permutation)
-        retMatrix[i,:] = minhashing(bm,permutation)
+        retMatrix[i, :] = minhashing(bm, permutation)
     return retMatrix
 
 
+def LSH(signatureMat, bands):
+    rowOfBand = math.ceil(float(np.shape(signatureMat)[0]) / bands)
+    similarPair = {}
+    for band in range(int(bands)):
+        rowInBand = signatureMat[band*rowOfBand:min(np.shape(signatureMat)[0],(band+1)*rowOfBand),:]
+        for i in range(np.shape(rowInBand)[1]):
+            for j in range(i + 1, np.shape(rowInBand)[1]):
+                if sum(rowInBand[:, i] == rowInBand[:, j]) == len(rowInBand[:, i]):
+                    if (i, j) not in similarPair.keys():
+                        similarPair[(i, j)] = 1
+                    else:
+                        similarPair[(i, j)] += 1
+    return similarPair
+
+
 if __name__ == '__main__':
-    boolMat = accessFile()
-    # boolMat = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
+    # boolMat = accessFile()
+    # boolMat = np.mat(boolMat)
+    # print(signatureMatrix(boolMat)[0:3])
+    # test:
+    boolMat = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
     # permu = [[2, 3, 6, 5, 7, 1, 4], [3, 1, 7, 2, 5, 6, 4], [7, 2, 6, 5, 1, 4, 3]]
     # for p in permu:
     #     print(minhashing(boolMat,p))
     boolMat = np.mat(boolMat)
-    print(signatureMatrix(boolMat)[0:3])
+    print(signatureMatrix(boolMat))
+    print(LSH(boolMat, 20))
 
     # print(boolMat[0,:].getA()[0].nonzero())
     # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
