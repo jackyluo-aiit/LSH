@@ -3,9 +3,12 @@ import math
 import numpy as np
 import operator
 import itertools
+import matplotlib.pyplot as plt
+
+from isort.utils import union
 
 
-def accessFile(filename="LSH_data.txt"):
+def accessFileToShingleMat(filename="LSH_data.txt"):
     file = open(filename)
     print("File name:", file.name)
 
@@ -60,8 +63,68 @@ def accessFile(filename="LSH_data.txt"):
     return a
 
 
+def accessFileToNormalMat(filename="LSH_data.txt"):
+    file = open(filename)
+    print("File name:", file.name)
+
+    filelist = file.readlines()
+    print("Read lines:", filelist.__len__())
+    # print("Read contents:")
+    index = 1
+
+    dictlist = []
+    doccount = []
+    for line in filelist:
+        filedict = {}
+        line = line.strip()
+        doc, word, occur = line.split(',')
+        if doccount.__len__() != 0:
+            if int(doc) not in doccount:
+                doccount.append(int(doc))
+        else:
+            doccount.append(int(doc))
+        filedict["doc"] = int(doc)
+        filedict["word"] = int(word)
+        filedict["occur"] = int(occur)
+        dictlist.append(filedict)
+
+        wordcount = max(dictlist, key=lambda x: x['word']).get('word')
+        doccount = doccount.__len__()
+        print("the max word:", wordcount)
+        print("the min word:", min(dictlist, key=lambda x: x['word']).get('word'))
+        print("the number of doc:", doccount)
+
+        a = np.zeros((wordcount, doccount))
+        for items in dictlist:
+            a[items['word'] - 1][items['doc'] - 1] = items['occur']
+
+        print("Shingle Matrix:\n", a)
+        print("Shingle Matrix.shape:", a.shape)
+        return a
+
+
 def jaccardSimilarityFromTwoCol(s1, s2):
     return float(sum(s1 + s2 == 2) / sum(s1 + s2 != 0))
+
+
+def jaccardSimilarityFromOccurance(doc, signatureMat):
+    docindex = doc - 1
+    similarPair = {}
+    for s2 in range(np.shape(signatureMat)[1]):
+        if docindex == s2:
+            continue
+        else:
+            similarcount = float(sum(signatureMat[:, docindex] == signatureMat[:, s2]))
+            similarcount = similarcount-float(sum(signatureMat[:, docindex]+signatureMat[:, s2]==0))
+            similarPair[(doc, s2 + 1)] = (similarcount,
+                                          float(
+                                              similarcount / sum(signatureMat[:, docindex] + signatureMat[:, s2] != 0)))
+    L = sorted(similarPair.items(),key = lambda item:item[1][1],reverse=True)
+    L = L[:100]
+    sortedSimilarPair = {}
+    for l in L:
+        sortedSimilarPair[l[0]] = l[1]
+    return sortedSimilarPair
 
 
 def minhashing(bm, permutation):
@@ -87,23 +150,48 @@ def signatureMatrix(bm, minhashNum=100):
     return retMatrix
 
 
-def LSH(signatureMat, bands):
+def LSH(signatureMat, bands, doc):
+    docindex = doc - 1
     rowOfBand = math.ceil(float(np.shape(signatureMat)[0]) / bands)
     similarPair = {}
     for band in range(int(bands)):
-        rowInBand = signatureMat[band*rowOfBand:min(np.shape(signatureMat)[0],(band+1)*rowOfBand),:]
-        for i in range(np.shape(rowInBand)[1]):
-            for j in range(i + 1, np.shape(rowInBand)[1]):
-                if sum(rowInBand[:, i] == rowInBand[:, j]) == len(rowInBand[:, i]):
-                    if (i, j) not in similarPair.keys():
-                        similarPair[(i, j)] = 1
-                    else:
-                        similarPair[(i, j)] += 1
-    return similarPair
+        rowInBand = signatureMat[band * rowOfBand:min(np.shape(signatureMat)[0], (band + 1) * rowOfBand), :]
+        for j in range(np.shape(rowInBand)[1]):
+            if j == docindex:
+                continue
+            if sum(rowInBand[:, docindex] == rowInBand[:, j]) == len(rowInBand[:, docindex]):
+                if (doc, j + 1) not in similarPair.keys():
+                    similarPair[(doc, j + 1)] = 1
+                else:
+                    similarPair[(doc, j + 1)] += 1
+    for key in similarPair.keys():
+        value = similarPair.get(key)
+        value = (value, value / bands)
+        similarPair[key] = value
+
+    L = sorted(similarPair.items(), key=lambda item: item[1][1], reverse=True)
+    L = L[:100]
+    sortedSimilarPair = {}
+    for l in L:
+        sortedSimilarPair[l[0]] = l[1]
+    return sortedSimilarPair
+
+
+
+def plotCarve(b, r):
+    x = np.arange(0, 1, 0.1)
+    y = 1 - (1 - x ** r) ** b
+    plt.xlim(0, 1, 0.1)
+    plt.ylim(0, 1, 0.1)
+    plt.xlabel("s")
+    plt.ylabel("prob")
+    plt.plot(x, y, "r:", )
+    plt.title("plot")
+    plt.show()
 
 
 if __name__ == '__main__':
-    # boolMat = accessFile()
+    # boolMat = accessFileToShingleMat()
     # boolMat = np.mat(boolMat)
     # print(signatureMatrix(boolMat)[0:3])
     # test:
@@ -112,8 +200,11 @@ if __name__ == '__main__':
     # for p in permu:
     #     print(minhashing(boolMat,p))
     boolMat = np.mat(boolMat)
+    signatureMat = signatureMatrix(boolMat)
     print(signatureMatrix(boolMat))
-    print(LSH(boolMat, 20))
+    print("Using LSH:", LSH(signatureMat, 50, 2))
+    print("Without using LSH:", jaccardSimilarityFromOccurance(2, boolMat))
+    # plotCarve(20, 20)
 
     # print(boolMat[0,:].getA()[0].nonzero())
     # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
