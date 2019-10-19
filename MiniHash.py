@@ -1,4 +1,5 @@
 import math
+import time
 
 import numpy as np
 import operator
@@ -32,9 +33,7 @@ def accessFileToShingleMat(filename="LSH_data.txt"):
         filedict["word"] = int(word)
         filedict["occur"] = int(occur)
         dictlist.append(filedict)
-        # if index%1000==0:
-        #     print(filedict)
-        # index+=1
+
 
     # print("The number of doc:",doccount.__len__())
     # print("doc:")
@@ -88,23 +87,25 @@ def accessFileToNormalMat(filename="LSH_data.txt"):
         filedict["occur"] = int(occur)
         dictlist.append(filedict)
 
-        wordcount = max(dictlist, key=lambda x: x['word']).get('word')
-        doccount = doccount.__len__()
-        print("the max word:", wordcount)
-        print("the min word:", min(dictlist, key=lambda x: x['word']).get('word'))
-        print("the number of doc:", doccount)
+    wordcount = max(dictlist, key=lambda x: x['word']).get('word')
+    doccount = doccount.__len__()
+    print("the max word:", wordcount)
+    print("the min word:", min(dictlist, key=lambda x: x['word']).get('word'))
+    print("the number of doc:", doccount)
 
-        a = np.zeros((wordcount, doccount))
-        for items in dictlist:
-            a[items['word'] - 1][items['doc'] - 1] = items['occur']
+    a = np.zeros((wordcount, doccount))
+    for items in dictlist:
+        a[items['word'] - 1][items['doc'] - 1] = items['occur']
 
-        print("Shingle Matrix:\n", a)
-        print("Shingle Matrix.shape:", a.shape)
-        return a
+    print("Shingle Matrix:\n", a)
+    print("Shingle Matrix.shape:", a.shape)
+    return a
 
 
 def jaccardSimilarityFromTwoCol(s1, s2):
-    return float(sum(s1 + s2 == 2) / sum(s1 + s2 != 0))
+    similarcount = float(sum(s1==s2))
+    similarcount = similarcount-float(sum(s1+s2==0))
+    return (similarcount,float(similarcount/sum(s1+s2!=0)))
 
 
 def jaccardSimilarityFromOccurance(doc, signatureMat):
@@ -164,12 +165,17 @@ def LSH(signatureMat, bands, doc):
                     similarPair[(doc, j + 1)] = 1
                 else:
                     similarPair[(doc, j + 1)] += 1
-    for key in similarPair.keys():
-        value = similarPair.get(key)
-        value = (value, value / bands)
-        similarPair[key] = value
+    # for key in similarPair.keys():
+    #     value = similarPair.get(key)
+    #     value = (value, value / bands)
+    #     similarPair[key] = value
 
-    L = sorted(similarPair.items(), key=lambda item: item[1][1], reverse=True)
+    LSHjaccard = {}
+    for key in similarPair.keys():
+        doc, s2 = key
+        LSHjaccard[doc,s2] = jaccardSimilarityFromTwoCol(signatureMat[:,doc-1],signatureMat[:,s2-1])
+
+    L = sorted(LSHjaccard.items(), key=lambda item: item[1][1], reverse=True)
     L = L[:100]
     sortedSimilarPair = {}
     for l in L:
@@ -191,20 +197,24 @@ def plotCarve(b, r):
 
 
 if __name__ == '__main__':
-    # boolMat = accessFileToShingleMat()
+    start = time.time()
     # boolMat = np.mat(boolMat)
     # print(signatureMatrix(boolMat)[0:3])
     # test:
-    boolMat = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
+    # boolMat = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
     # permu = [[2, 3, 6, 5, 7, 1, 4], [3, 1, 7, 2, 5, 6, 4], [7, 2, 6, 5, 1, 4, 3]]
     # for p in permu:
     #     print(minhashing(boolMat,p))
+
+    boolMat = accessFileToShingleMat("LSH_data.txt")
     boolMat = np.mat(boolMat)
-    signatureMat = signatureMatrix(boolMat)
-    print(signatureMatrix(boolMat))
-    print("Using LSH:", LSH(signatureMat, 50, 2))
-    print("Without using LSH:", jaccardSimilarityFromOccurance(2, boolMat))
+    signatureMat = signatureMatrix(boolMat, 100)
+    # print(signatureMatrix(boolMat))
+    normalMat = accessFileToNormalMat("LSH_data.txt")
+    print("Using LSH:", LSH(signatureMat, 40, 2))
+    print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
     # plotCarve(20, 20)
+    print('Time taken: {} secs\n'.format(time.time() - start))
 
     # print(boolMat[0,:].getA()[0].nonzero())
     # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
