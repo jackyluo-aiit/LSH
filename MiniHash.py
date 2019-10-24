@@ -186,12 +186,12 @@ def LSH(signatureMat, bands, doc):
 
 def checkIntersection(dict1, dict2):
     if len(dict1) != len(dict2):
-        print('dict1.length: ',len(dict1.keys))
-        print('dict2.length: ', len(dict2.keys))
+        print('dict1.length: ',len(dict1))
+        print('dict2.length: ', len(dict2))
         return 'They have different length'
     count = 0
-    for k1 in dict1.keys:
-        if k1 in dict2.keys:
+    for k1 in dict1.keys():
+        if k1 in dict2.keys():
             count += 1
 
     return count
@@ -220,16 +220,16 @@ if __name__ == '__main__':
     # for p in permu:
     #     print(minhashing(boolMat,p))
 
-    # boolMat = accessFileToShingleMat("LSH_data.txt")
-    # boolMat = np.mat(boolMat)
-    # signatureMat = signatureMatrix(boolMat, 500)
-    # # print(signatureMatrix(boolMat))
-    # normalMat = accessFileToNormalMat("LSH_data.txt")
-    # print("Using LSH:", LSH(signatureMat, 40, 2))
-    # print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
-    # print("intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
-    # # plotCarve(20, 20)
-    # print('Time taken: {} secs\n'.format(time.time() - start))
+    boolMat = accessFileToShingleMat("LSH_data.txt")
+    boolMat = np.mat(boolMat)
+    signatureMat = signatureMatrix(boolMat, 500)
+    # print(signatureMatrix(boolMat))
+    normalMat = accessFileToNormalMat("LSH_data.txt")
+    print("Using LSH:", LSH(signatureMat, 40, 2))
+    print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
+    print("intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
+    # plotCarve(20, 20)
+    print('Time taken: {} secs\n'.format(time.time() - start))
 
 
     # plotCarve(500)
