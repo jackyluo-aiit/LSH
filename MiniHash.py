@@ -222,12 +222,12 @@ if __name__ == '__main__':
 
     boolMat = accessFileToShingleMat("LSH_data.txt")
     boolMat = np.mat(boolMat)
-    signatureMat = signatureMatrix(boolMat, 500)
+    signatureMat = signatureMatrix(boolMat, 100)
     # print(signatureMatrix(boolMat))
     normalMat = accessFileToNormalMat("LSH_data.txt")
     print("Using LSH:", LSH(signatureMat, 40, 2))
     print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
-    print("intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
+    print("Intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
     # plotCarve(20, 20)
     print('Time taken: {} secs\n'.format(time.time() - start))
 
