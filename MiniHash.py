@@ -198,14 +198,17 @@ def checkIntersection(dict1, dict2):
 
 
 def plotCarve(m):
-    for b in range(1, m, 1):
+    for b in range(1, m):
         r = m // b
-        x = np.arange(0, 1, 0.1)
+        if r*b!=m:
+            continue
+        x = np.arange(0, 1, 0.01)
         y = 1 - (1 - x ** r) ** b
         plt.xlim(0, 1)
         plt.xlabel("s")
         plt.ylabel("prob")
-        plt.plot(x, y, color="blue", linewidth=1.0, linestyle="-")
+        plt.plot(x, y, linestyle="-",label="r = %s; b = %s"%(r,b))
+        plt.legend()
         plt.title("plot")
     plt.show()
 
@@ -220,19 +223,19 @@ if __name__ == '__main__':
     # for p in permu:
     #     print(minhashing(boolMat,p))
 
-    boolMat = accessFileToShingleMat("LSH_data.txt")
-    boolMat = np.mat(boolMat)
-    signatureMat = signatureMatrix(boolMat, 500)
-    # print(signatureMatrix(boolMat))
-    normalMat = accessFileToNormalMat("LSH_data.txt")
-    print("Using LSH:", LSH(signatureMat, 40, 2))
-    print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
-    print("intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
-    # plotCarve(20, 20)
-    print('Time taken: {} secs\n'.format(time.time() - start))
+    # boolMat = accessFileToShingleMat("LSH_data.txt")
+    # boolMat = np.mat(boolMat)
+    # signatureMat = signatureMatrix(boolMat, 500)
+    # # print(signatureMatrix(boolMat))
+    # normalMat = accessFileToNormalMat("LSH_data.txt")
+    # print("Using LSH:", LSH(signatureMat, 40, 2))
+    # print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
+    # print("intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
+    # # plotCarve(20, 20)
+    # print('Time taken: {} secs\n'.format(time.time() - start))
 
 
-    # plotCarve(500)
+    plotCarve(500)
     # print(boolMat[0,:].getA()[0].nonzero())
     # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
 
