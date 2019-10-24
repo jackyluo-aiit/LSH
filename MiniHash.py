@@ -5,6 +5,7 @@ import numpy as np
 import operator
 import itertools
 import matplotlib.pyplot as plt
+import scipy.interpolate
 
 from isort.utils import union
 
@@ -183,16 +184,29 @@ def LSH(signatureMat, bands, doc):
     return sortedSimilarPair
 
 
+def checkIntersection(dict1, dict2):
+    if len(dict1.keys) != len(dict2.keys):
+        print('dict1.length: ',len(dict1.keys))
+        print('dict2.length: ', len(dict2.keys))
+        return 'They have different length'
+    count = 0
+    for k1 in dict1.keys:
+        if k1 in dict2.keys:
+            count += 1
 
-def plotCarve(b, r):
-    x = np.arange(0, 1, 0.1)
-    y = 1 - (1 - x ** r) ** b
-    plt.xlim(0, 1, 0.1)
-    plt.ylim(0, 1, 0.1)
-    plt.xlabel("s")
-    plt.ylabel("prob")
-    plt.plot(x, y, "r:", )
-    plt.title("plot")
+    return count
+
+
+def plotCarve(m):
+    for b in range(1, m, 1):
+        r = m // b
+        x = np.arange(0, 1, 0.1)
+        y = 1 - (1 - x ** r) ** b
+        plt.xlim(0, 1)
+        plt.xlabel("s")
+        plt.ylabel("prob")
+        plt.plot(x, y, color="blue", linewidth=1.0, linestyle="-")
+        plt.title("plot")
     plt.show()
 
 
@@ -208,14 +222,15 @@ if __name__ == '__main__':
 
     boolMat = accessFileToShingleMat("LSH_data.txt")
     boolMat = np.mat(boolMat)
-    signatureMat = signatureMatrix(boolMat, 100)
+    signatureMat = signatureMatrix(boolMat, 500)
     # print(signatureMatrix(boolMat))
     normalMat = accessFileToNormalMat("LSH_data.txt")
     print("Using LSH:", LSH(signatureMat, 40, 2))
     print("Without using LSH:", jaccardSimilarityFromOccurance(2, normalMat))
+    print("intersection: ", (checkIntersection(LSH(signatureMat, 40, 2), jaccardSimilarityFromOccurance(2, normalMat))))
     # plotCarve(20, 20)
     print('Time taken: {} secs\n'.format(time.time() - start))
-
+    # plotCarve(500)
     # print(boolMat[0,:].getA()[0].nonzero())
     # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
 
