@@ -2,12 +2,7 @@ import math
 import time
 
 import numpy as np
-import operator
-import itertools
 import matplotlib.pyplot as plt
-import scipy.interpolate
-
-from isort.utils import union
 
 
 def accessFileToShingleMat(filename="LSH_data.txt"):
@@ -16,8 +11,6 @@ def accessFileToShingleMat(filename="LSH_data.txt"):
 
     filelist = file.readlines()
     print("Read lines:", filelist.__len__())
-    # print("Read contents:")
-    index = 1
 
     dictlist = []
     doccount = []
@@ -36,18 +29,6 @@ def accessFileToShingleMat(filename="LSH_data.txt"):
         dictlist.append(filedict)
 
 
-    # print("The number of doc:",doccount.__len__())
-    # print("doc:")
-    # doccount = sorted(doccount)
-    # for d in doccount:
-    #     print(d)
-
-    # dictlist.sort(key=operator.itemgetter('doc'))
-    # for doc, items in itertools.groupby(dictlist,key = operator.itemgetter('doc')):
-    #     if doc == 1:
-    #         print(doc)
-    #         for i in items:
-    #             print(i)
     wordcount = max(dictlist, key=lambda x: x['word']).get('word')
     doccount = doccount.__len__()
     print("the max word:", wordcount)
@@ -69,8 +50,6 @@ def accessFileToNormalMat(filename="LSH_data.txt"):
 
     filelist = file.readlines()
     print("Read lines:", filelist.__len__())
-    # print("Read contents:")
-    index = 1
 
     dictlist = []
     doccount = []
@@ -167,16 +146,13 @@ def LSH(signatureMat, bands, doc):
                     similarPair[(doc, j + 1)] = 1
                 else:
                     similarPair[(doc, j + 1)] += 1
-    # for key in similarPair.keys():
-    #     value = similarPair.get(key)
-    #     value = (value, value / bands)
-    #     similarPair[key] = value
 
     LSHjaccard = {}
     for key in similarPair.keys():
         doc, s2 = key
         LSHjaccard[doc,s2] = jaccardSimilarityFromTwoCol(signatureMat[:,doc-1],signatureMat[:,s2-1])
 
+    # sort the output and select top-100
     L = sorted(LSHjaccard.items(), key=lambda item: item[1][1], reverse=True)
     L = L[:100]
     sortedSimilarPair = {}
@@ -216,18 +192,9 @@ def plotCarve(m):
 
 if __name__ == '__main__':
     start = time.time()
-    # boolMat = np.mat(boolMat)
-    # print(signatureMatrix(boolMat)[0:3])
-    # test:
-    # boolMat = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
-    # permu = [[2, 3, 6, 5, 7, 1, 4], [3, 1, 7, 2, 5, 6, 4], [7, 2, 6, 5, 1, 4, 3]]
-    # for p in permu:
-    #     print(minhashing(boolMat,p))
-
     boolMat = accessFileToShingleMat("LSH_data.txt")
     boolMat = np.mat(boolMat)
     signatureMat = signatureMatrix(boolMat, 500)
-    # print(signatureMatrix(boolMat))
     normalMat = accessFileToNormalMat("LSH_data.txt")
     dictLSH = LSH(signatureMat, 500, 2)
     dictNor = jaccardSimilarityFromOccurance(2, normalMat)
@@ -235,14 +202,4 @@ if __name__ == '__main__':
     print("Using brute-force:", dictNor)
     print("intersection: ", (checkIntersection(dictLSH, dictNor)))
     print('Time taken: {} secs\n'.format(time.time() - start))
-
-
     plotCarve(500)
-    # print(boolMat[0,:].getA()[0].nonzero())
-    # print(jaccardSimilarityFromTwoCol(boolMat[:, 1], boolMat[:, 0]))
-
-# print(jaccardSimilarityFromTwoCol(np.array([1, 0, 0, 1, 0]), np.array([0, 0, 1, 1, 0])))
-
-# docnums = itertools.groupby(filelist,key=lambda x:x[2])
-# for k,g in docnums:
-#     print(g)
