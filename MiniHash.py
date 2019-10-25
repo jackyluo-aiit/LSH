@@ -142,6 +142,7 @@ def minhashing(bm, permutation):
 
 
 def signatureMatrix(bm, minhashNum=100):
+    print("Using hash num: ",minhashNum)
     from random import shuffle
     retMatrix = np.zeros((minhashNum, np.shape(bm)[1]))
     permutation = list(range(1, np.shape(bm)[0] + 1))
